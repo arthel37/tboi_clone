@@ -18,45 +18,73 @@ class Game:
         self.player_rect = pygame.Rect(config.WINDOW_WIDTH // 2, config.WINDOW_HEIGHT // 2, 10, 10)
         self.player_speed = 5
 
+        middle_idx = config.GRID_SIZE // 2
+        door_start_tile_x = config.GRID_OFFSET_X + (middle_idx * config.TILE_WIDTH)
+        door_start_tile_y = config.GRID_OFFSET_Y + (middle_idx * config.TILE_HEIGHT)
+        
+        self.door_top_rect = pygame.Rect(door_start_tile_x, config.GRID_BORDER_TOP, config.TILE_WIDTH, 10)
+        self.door_bottom_rect = pygame.Rect(door_start_tile_x, config.GRID_BORDER_BOTTOM - 10, config.TILE_WIDTH, 10)
+        self.door_left_rect = pygame.Rect(config.GRID_BORDER_LEFT, door_start_tile_y, 10, config.TILE_HEIGHT)
+        self.door_right_rect = pygame.Rect(config.GRID_BORDER_RIGHT - 10, door_start_tile_y, 10, config.TILE_HEIGHT)
+
+    def reset(self):
+        print('Nowa gra')
+        self.level_manager = Level(1)
+        self.curr_room_coords = (0, 0)
+        self.curr_room = self.level_manager.map[self.curr_room_coords]
+        self.player_rect.center = (config.WINDOW_WIDTH // 2, config.WINDOW_HEIGHT // 2)
+
     def update(self):
         keys = pygame.key.get_pressed()
 
+        dx, dy = 0, 0
+
         if keys[pygame.K_UP]:
-            self.player_rect.y -= self.player_speed
+            dy -= self.player_speed
         if keys[pygame.K_DOWN]:
-            self.player_rect.y += self.player_speed
+            dy += self.player_speed
         if keys[pygame.K_LEFT]:
-            self.player_rect.x -= self.player_speed
+            dx -= self.player_speed
         if keys[pygame.K_RIGHT]:
-            self.player_rect.x += self.player_speed
+            dx += self.player_speed
+
+        self.player_rect.x += dx
+        self.player_rect.y += dy
 
         if keys[pygame.K_ESCAPE]:
             self.manager.set_state('menu')
 
+        if self.curr_room.doors['top'] and self.player_rect.colliderect(self.door_top_rect):
+            self.change_room(0, -1)
+            self.player_rect.bottom = config.GRID_BORDER_BOTTOM - 20
+            return
+
+        if self.curr_room.doors['bottom'] and self.player_rect.colliderect(self.door_bottom_rect):
+            self.change_room(0, 1)
+            self.player_rect.top = config.GRID_BORDER_TOP + 20
+            return
+
+        if self.curr_room.doors['left'] and self.player_rect.colliderect(self.door_left_rect):
+            self.change_room(-1, 0)
+            self.player_rect.right = config.GRID_BORDER_RIGHT - 20
+            return
+
+        if self.curr_room.doors['right'] and self.player_rect.colliderect(self.door_right_rect):
+            self.change_room(1, 0)
+            self.player_rect.left = config.GRID_BORDER_LEFT + 20
+            return
+        
         if self.player_rect.top < config.GRID_BORDER_TOP:
-            if self.curr_room.doors['top']:
-                self.change_room(0, -1)
-                self.player_rect.bottom = config.GRID_BORDER_BOTTOM
-            else:
-                self.player_rect.top = config.GRID_BORDER_TOP
-        elif self.player_rect.bottom > config.GRID_BORDER_BOTTOM:
-            if self.curr_room.doors['bottom']:
-                self.change_room(0, 1)
-                self.player_rect.top = config.GRID_BORDER_TOP
-            else:
-                self.player_rect.bottom = config.GRID_BORDER_BOTTOM
-        elif self.player_rect.left < config.GRID_BORDER_LEFT:
-            if self.curr_room.doors['left']:
-                self.change_room(-1, 0)
-                self.player_rect.right = config.GRID_BORDER_RIGHT
-            else:
-                self.player_rect.left = config.GRID_BORDER_LEFT
-        elif self.player_rect.right > config.GRID_BORDER_RIGHT:
-            if self.curr_room.doors['right']:
-                self.change_room(1, 0)
-                self.player_rect.left = config.GRID_BORDER_LEFT
-            else:
-                self.player_rect.right = config.GRID_BORDER_RIGHT
+            self.player_rect.top = config.GRID_BORDER_TOP
+        
+        if self.player_rect.bottom > config.GRID_BORDER_BOTTOM:
+            self.player_rect.bottom = config.GRID_BORDER_BOTTOM
+            
+        if self.player_rect.left < config.GRID_BORDER_LEFT:
+            self.player_rect.left = config.GRID_BORDER_LEFT
+            
+        if self.player_rect.right > config.GRID_BORDER_RIGHT:
+            self.player_rect.right = config.GRID_BORDER_RIGHT
 
     def change_room(self, dx, dy):
         x, y = self.curr_room_coords
