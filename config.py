@@ -1,7 +1,5 @@
 import pygame
 
-pygame.font.init()
-
 # Konfiguracja czcionek
 COLOR_WHITE = (255, 255, 255)
 COLOR_BLACK = (0, 0, 0)
@@ -13,6 +11,40 @@ COLOR_TEXT_DESELECT = (100, 100, 100)
 FONT_PATH = 'fonts\\upheavtt.ttf'
 FONT_SIZE = 40
 FONT_SIZE_LARGE = 60
+
 # Ustalenie wymiarów okienka
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
+
+# Ustalenie wielkości siatki pokoju
+GRID_SIZE = 21
+
+## Grubość ścian
+WALL_HORIZ_THICKNESS = max(1, WINDOW_WIDTH // (GRID_SIZE + 2))
+WALL_VERT_THICKNESS = max(1, WINDOW_HEIGHT // (GRID_SIZE + 2))
+
+## Rozmiar siatki
+GRID_WIDTH = WINDOW_WIDTH - (WALL_HORIZ_THICKNESS * 2)
+GRID_HEIGHT = WINDOW_HEIGHT - (WALL_VERT_THICKNESS * 2)
+
+## Rozmiar kafelka
+TILE_WIDTH = GRID_WIDTH // GRID_SIZE
+TILE_HEIGHT = GRID_HEIGHT // GRID_SIZE
+
+## Rzeczywisty rozmiar podłogi (z dzielenia całkowitego)
+ACT_GRID_WIDTH = TILE_WIDTH * GRID_SIZE
+ACT_GRID_HEIGHT = TILE_HEIGHT * GRID_SIZE
+
+## Przesunięcie (z dzielenia całkowitego)
+GRID_OFFSET_X = (WINDOW_WIDTH - ACT_GRID_WIDTH) // 2
+GRID_OFFSET_Y = (WINDOW_HEIGHT - ACT_GRID_HEIGHT) // 2
+
+## Granice ruchu
+GRID_BORDER_TOP = GRID_OFFSET_Y
+GRID_BORDER_BOTTOM = WINDOW_HEIGHT - GRID_OFFSET_Y
+GRID_BORDER_LEFT = GRID_OFFSET_X
+GRID_BORDER_RIGHT = WINDOW_WIDTH - GRID_OFFSET_X
+
+## Wymiary drzwi
+DOOR_WIDTH = TILE_WIDTH * 3
+DOOR_HEIGHT = TILE_HEIGHT * 3
