@@ -248,6 +248,10 @@ class Player(Entity):
             head_frame = head_frame[0]
         surf.blit(head_frame, self.pos)
 
+    def set_pos(self, x, y):
+        self.pos[0] = x
+        self.pos[1] = y
+        self.hitbox.topleft = self.pos
 
 
 class Enemy(Entity):

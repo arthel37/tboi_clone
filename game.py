@@ -1,6 +1,10 @@
 import pygame
 import sys
 import config
+import Entities
+from Utils import load_image, EventHandlingMoj , spawn_enemy
+from mobs import get_mobs_config, get_player_config
+from UIMoj import UI
 from main_menu import MainMenu
 from state_machine import StateMachine
 from level import Level
@@ -14,9 +18,29 @@ class Game:
         self.curr_room_coords = (0, 0)
         self.curr_room = self.level_manager.map[self.curr_room_coords]
 
+        self.movement = [False, False, False, False]
+        self.shooting = [False, False, False, False]
+
+        self.assets = {
+            'player_sheet':load_image('isaac/character_isaac.png'),
+            'zombie_head_sheet':load_image('enemies/zombie_head.png'),
+            'zombie_legs_sheet':load_image('enemies/zombie_legs.png'),
+            'fly':load_image('enemies/fly.png'),
+            'tear_sheet':load_image('tears/tear.png'),
+            'blood_tear_sheet':load_image('tears/bloodtear.png'),
+            'heart_sheet':load_image('ui/hearts.png'),
+        }
+
+        self.isaac_animations = get_player_config(self.assets)
+        self.enemies_animations = get_mobs_config(self.assets)
+
+        self.player = Entities.Player(self, (config.WINDOW_WIDTH // 2, config.WINDOW_HEIGHT // 2))
+        self.entities = [self.player]
+        self.ui = UI(self)
+
         ## TEMPORARY PLAyER
-        self.player_rect = pygame.Rect(config.WINDOW_WIDTH // 2, config.WINDOW_HEIGHT // 2, 10, 10)
-        self.player_speed = 5
+        #self.player_rect = pygame.Rect(config.WINDOW_WIDTH // 2, config.WINDOW_HEIGHT // 2, 10, 10)
+        #self.player_speed = 5
 
         middle_idx = config.GRID_SIZE // 2
         door_start_idx = middle_idx - 1
@@ -37,28 +61,32 @@ class Game:
         self.level_manager = Level(1)
         self.curr_room_coords = (0, 0)
         self.curr_room = self.level_manager.map[self.curr_room_coords]
-        self.player_rect.center = (config.WINDOW_WIDTH // 2, config.WINDOW_HEIGHT // 2)
+        #self.player_rect.center = (config.WINDOW_WIDTH // 2, config.WINDOW_HEIGHT // 2)
+        #self.player.pos.
 
     def update(self):
         keys = pygame.key.get_pressed()
-
-        dx, dy = 0, 0
-
-        if keys[pygame.K_w]:
-            dy -= self.player_speed
-        if keys[pygame.K_s]:
-            dy += self.player_speed
-        if keys[pygame.K_a]:
-            dx -= self.player_speed
-        if keys[pygame.K_d]:
-            dx += self.player_speed
-
-        self.player_rect.x += dx
-        self.player_rect.y += dy
-
+        
         if keys[pygame.K_ESCAPE]:
             self.manager.set_state('menu')
 
+        if self.curr_room.doors['top'] and self.player.hitbox.colliderect(self.door_top_rect):
+            self.change_room(0, -1)
+            self.player.set_pos(self.player.pos[0], config.GRID_BORDER_BOTTOM - self.player.hitbox.size[1])
+            return
+        if self.curr_room.doors['bottom'] and self.player.hitbox.colliderect(self.door_bottom_rect):
+            self.change_room(0, 1)
+            self.player.set_pos(self.player.pos[0], config.GRID_BORDER_TOP + self.player.hitbox.size[1])
+            return
+        if self.curr_room.doors['left'] and self.player.hitbox.colliderect(self.door_left_rect):
+            self.change_room(-1, 0)
+            self.player.set_pos(config.GRID_BORDER_RIGHT - self.player.hitbox.size[0], self.player.pos[1])
+            return
+        if self.curr_room.doors['right'] and self.player.hitbox.colliderect(self.door_right_rect):
+            self.change_room(1, 0)
+            self.player.set_pos(config.GRID_BORDER_LEFT + self.player.hitbox.size[0], self.player.pos[1])
+            return
+        """
         if self.curr_room.doors['top'] and self.player_rect.colliderect(self.door_top_rect):
             self.change_room(0, -1)
             self.player_rect.bottom = config.GRID_BORDER_BOTTOM - 20
@@ -90,7 +118,7 @@ class Game:
             
         if self.player_rect.right > config.GRID_BORDER_RIGHT and not (self.player_rect.top > self.door_right_rect.top and self.player_rect.bottom < self.door_right_rect.bottom):
             self.player_rect.right = config.GRID_BORDER_RIGHT
-
+        """
     def change_room(self, dx, dy):
         x, y = self.curr_room_coords
         new_coords = (x + dx, y + dy)
@@ -104,7 +132,6 @@ class Game:
     
     def draw(self, surface, room_textures):
         self.curr_room.draw(surface, room_textures)
-        pygame.draw.rect(surface, (0, 255, 0), self.player_rect)
         self.draw_minimap(surface)
 
     def draw_minimap(self, surface):
@@ -143,17 +170,6 @@ class Game:
         mm_x = config.WINDOW_WIDTH - config.MINIMAP_WIDTH - config.MINIMAP_MARGIN
         mm_y = config.MINIMAP_MARGIN
         surface.blit(minimap_surf, (mm_x, mm_y))
-
-# Metody gry
-def create_vignette(width, height):
-    print('Tworzenie winiety...')
-    vignette = pygame.Surface((width, height), pygame.SRCALPHA)
-    vignette.fill((0, 0, 0, 50))
-    mask = pygame.Surface((width // 3, height // 3), pygame.SRCALPHA)
-    pygame.draw.ellipse(mask, (255, 255, 255, 255), mask.get_rect())
-    mask = pygame.transform.smoothscale(mask, (width, height))
-    vignette.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_SUB)
-    return vignette
 
 pygame.init()
 window_surface = pygame.display.set_mode((config.WINDOW_WIDTH, config.WINDOW_HEIGHT))
@@ -203,9 +219,6 @@ except FileNotFoundError as e:
     sys.exit()
 
 manager = StateMachine()
-
-vignette = create_vignette(config.WINDOW_WIDTH, config.WINDOW_HEIGHT)
-
 game_instance = Game(manager)
 main_menu = MainMenu(manager)
 
@@ -214,6 +227,8 @@ prev_state = None
 
 while game_status:
     events = pygame.event.get()
+    tick = clock.tick(config.FPS)
+
     for event in events:
         if event.type == pygame.QUIT:
             game_status = False
@@ -228,9 +243,21 @@ while game_status:
             game_instance.reset()
         game_instance.update()
         game_instance.draw(window_surface, room_textures)
+        EventHandlingMoj(game_instance.movement, game_instance.shooting)
+
+        for e in game_instance.entities.copy():
+            if isinstance(e, Entities.Enemy):
+                e.update(tick)
+            else:
+                e.update()
+            if not isinstance(e, Entities.Player):
+                e.render(window_surface)
+
+        game_instance.player.update(game_instance.movement, game_instance.shooting, tick)
+        game_instance.player.render(window_surface)
+        game_instance.ui.render(window_surface)
     
     pygame.display.update()
-    clock.tick(60)
 
     prev_state = curr_state
 
