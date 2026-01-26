@@ -19,13 +19,18 @@ class Game:
         self.player_speed = 5
 
         middle_idx = config.GRID_SIZE // 2
-        door_start_tile_x = config.GRID_OFFSET_X + (middle_idx * config.TILE_WIDTH)
-        door_start_tile_y = config.GRID_OFFSET_Y + (middle_idx * config.TILE_HEIGHT)
+        door_start_idx = middle_idx - 1
         
-        self.door_top_rect = pygame.Rect(door_start_tile_x, config.GRID_BORDER_TOP, config.TILE_WIDTH, 10)
-        self.door_bottom_rect = pygame.Rect(door_start_tile_x, config.GRID_BORDER_BOTTOM - 10, config.TILE_WIDTH, 10)
-        self.door_left_rect = pygame.Rect(config.GRID_BORDER_LEFT, door_start_tile_y, 10, config.TILE_HEIGHT)
-        self.door_right_rect = pygame.Rect(config.GRID_BORDER_RIGHT - 10, door_start_tile_y, 10, config.TILE_HEIGHT)
+        door_start_tile_x = config.GRID_OFFSET_X + (door_start_idx * config.TILE_WIDTH)
+        door_start_tile_y = config.GRID_OFFSET_Y + (door_start_idx * config.TILE_HEIGHT)
+        
+        door_width = config.TILE_WIDTH * 3
+        door_height = config.TILE_HEIGHT * 3
+        
+        self.door_top_rect = pygame.Rect(door_start_tile_x, config.GRID_BORDER_TOP - 10, door_width, 10)
+        self.door_bottom_rect = pygame.Rect(door_start_tile_x, config.GRID_BORDER_BOTTOM, door_width, 10)
+        self.door_left_rect = pygame.Rect(config.GRID_BORDER_LEFT - 10, door_start_tile_y, 10, door_height)
+        self.door_right_rect = pygame.Rect(config.GRID_BORDER_RIGHT, door_start_tile_y, 10, door_height)
 
     def reset(self):
         print('Nowa gra')
@@ -74,16 +79,16 @@ class Game:
             self.player_rect.left = config.GRID_BORDER_LEFT + 20
             return
         
-        if self.player_rect.top < config.GRID_BORDER_TOP:
+        if self.player_rect.top < config.GRID_BORDER_TOP and not (self.player_rect.left > self.door_top_rect.left and self.player_rect.right < self.door_top_rect.right):
             self.player_rect.top = config.GRID_BORDER_TOP
         
-        if self.player_rect.bottom > config.GRID_BORDER_BOTTOM:
+        if self.player_rect.bottom > config.GRID_BORDER_BOTTOM and not (self.player_rect.left > self.door_bottom_rect.left and self.player_rect.right < self.door_bottom_rect.right):
             self.player_rect.bottom = config.GRID_BORDER_BOTTOM
             
-        if self.player_rect.left < config.GRID_BORDER_LEFT:
+        if self.player_rect.left < config.GRID_BORDER_LEFT and not (self.player_rect.top > self.door_left_rect.top and self.player_rect.bottom < self.door_left_rect.bottom):
             self.player_rect.left = config.GRID_BORDER_LEFT
             
-        if self.player_rect.right > config.GRID_BORDER_RIGHT:
+        if self.player_rect.right > config.GRID_BORDER_RIGHT and not (self.player_rect.top > self.door_right_rect.top and self.player_rect.bottom < self.door_right_rect.bottom):
             self.player_rect.right = config.GRID_BORDER_RIGHT
 
     def change_room(self, dx, dy):
@@ -178,8 +183,8 @@ while game_status:
         main_menu.update(events)
         main_menu.draw(window_surface, font, font_large)
     elif curr_state == 'game':
-        #if prev_state != curr_state:
-        #    game_instance.level_manager.generate_level()
+        if prev_state != curr_state:
+            game_instance.reset()
         game_instance.update()
         game_instance.draw(window_surface, room_textures)
     
