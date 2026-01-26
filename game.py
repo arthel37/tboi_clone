@@ -44,13 +44,13 @@ class Game:
 
         dx, dy = 0, 0
 
-        if keys[pygame.K_UP]:
+        if keys[pygame.K_w]:
             dy -= self.player_speed
-        if keys[pygame.K_DOWN]:
+        if keys[pygame.K_s]:
             dy += self.player_speed
-        if keys[pygame.K_LEFT]:
+        if keys[pygame.K_a]:
             dx -= self.player_speed
-        if keys[pygame.K_RIGHT]:
+        if keys[pygame.K_d]:
             dx += self.player_speed
 
         self.player_rect.x += dx
@@ -98,10 +98,51 @@ class Game:
         if new_coords in self.level_manager.map:
             self.curr_room_coords = new_coords
             self.curr_room = self.level_manager.map[new_coords]
+            self.curr_room.visited = True
+        
+        print(self.curr_room.info())
     
     def draw(self, surface, room_textures):
         self.curr_room.draw(surface, room_textures)
         pygame.draw.rect(surface, (0, 255, 0), self.player_rect)
+        self.draw_minimap(surface)
+
+    def draw_minimap(self, surface):
+        minimap_surf = pygame.Surface((config.MINIMAP_WIDTH, config.MINIMAP_HEIGHT), pygame.SRCALPHA)
+        
+        bg_color = (*config.COLOR_MM_BCKG, config.MINIMAP_ALPHA)
+        minimap_surf.fill(bg_color)
+
+        center_x = config.MINIMAP_WIDTH // 2
+        center_y = config.MINIMAP_HEIGHT // 2
+        
+        tile_size = config.MINIMAP_TILE_SIZE
+        spacing = 2 
+
+        for coords, room in self.level_manager.map.items():
+            room_x, room_y = coords
+            curr_x, curr_y = self.curr_room_coords
+
+            diff_x = room_x - curr_x
+            diff_y = room_y - curr_y
+
+            draw_x = int(center_x + (diff_x * (tile_size + spacing)) - (tile_size // 2))
+            draw_y = int(center_y + (diff_y * (tile_size + spacing)) - (tile_size // 2))
+
+            if coords == self.curr_room_coords:
+                color = config.COLOR_MM_CURR
+            elif room.visited:
+                color = config.COLOR_MM_DISCOVERED
+            else:
+                color = config.COLOR_MM_UNDISCOVERED
+
+            pygame.draw.rect(minimap_surf, color, (draw_x, draw_y, tile_size, tile_size))
+
+        pygame.draw.rect(minimap_surf, (200, 200, 200), minimap_surf.get_rect(), 2)
+
+        mm_x = config.WINDOW_WIDTH - config.MINIMAP_WIDTH - config.MINIMAP_MARGIN
+        mm_y = config.MINIMAP_MARGIN
+        surface.blit(minimap_surf, (mm_x, mm_y))
 
 # Metody gry
 def create_vignette(width, height):

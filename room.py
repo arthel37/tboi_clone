@@ -7,6 +7,7 @@ class Room:
         self.y = y
         self.room_type = room_type
         self.distance = 0
+        self.visited = False
 
         self.doors = {
             'top': False,
