@@ -1,6 +1,7 @@
 import pygame
 import sys
 import Entities
+
 BASE_IMG_PATH='data/images/'
 
 key_to_index_move = {
@@ -55,3 +56,9 @@ def spawn_enemy(game, type_name, pos, scale=3, anim_key=None):
     enemy = Entities.Enemy(game, pos, type_name=type_name, scale=scale, anim_key=anim_key)
     game.entities.append(enemy)
     return enemy
+
+def spawn_boss(game, name, pos):
+    from Bosses import Boss
+    boss = Boss(game=game, pos=pos, name=name)
+    game.entities.append(boss)
+    return boss

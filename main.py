@@ -1,6 +1,6 @@
 import pygame
 import Entities
-from Utils import load_image, EventHandlingMoj , spawn_enemy
+from Utils import load_image, EventHandlingMoj , spawn_enemy, spawn_boss
 from mobs import get_mobs_config, get_player_config
 from UIMoj import UI
 WIDTH, HEIGHT = 1280, 720
@@ -25,6 +25,7 @@ class Game:
             'tear_sheet':load_image('tears/tear.png'),
             'blood_tear_sheet':load_image('tears/bloodtear.png'),
             'heart_sheet':load_image('ui/hearts.png'),
+            'gurdy_jr_sheet': load_image('bosses/gurdyjr.png'),
         }
         self.isaac_animations = get_player_config(self.assets)
         self.enemies_animations = get_mobs_config(self.assets)
@@ -32,10 +33,9 @@ class Game:
 
         self.player = Entities.Player(self, (50, 50))
         self.entities = [self.player]
-        spawn_enemy(self, "zombie", (200, 200))
+        spawn_boss(self,"gurdy_jr",(600,400))
 
-        spawn_enemy(self, "zombie", (500, 500))
-        spawn_enemy(self, "fly", (600, 500))
+
         self.ui = UI(self)
     def run(self):
         while True:
@@ -46,16 +46,16 @@ class Game:
             EventHandlingMoj(self.movement, self.shooting)
 
             for e in self.entities[:]:
-                if isinstance(e, Entities.Enemy):
-                    e.update(dt)
-                else:
-                    e.update()
                 if not isinstance(e, Entities.Player):
-                     e.render(self.screen)
+                    e.update(dt)
+                    e.render(self.screen)
+
+
 
             self.player.update(self.movement, self.shooting,dt)
             self.player.render(self.screen)
             self.ui.render(self.screen)
+
             if self.player.hp <=0:
                 print("Game Over")
             pygame.display.update()
