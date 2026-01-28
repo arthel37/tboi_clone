@@ -4,9 +4,10 @@ import sys
 from button import Button
 
 class MainMenu:
-    def __init__(self, manager, vignette=None):
+    def __init__(self, manager, game_instance, vignette=None):
         print('Tworzenie obiektu menu...')
         self.manager = manager
+        self.game = game_instance
         self.vignette = vignette
         
         mid_x = config.WINDOW_WIDTH // 2
@@ -14,9 +15,7 @@ class MainMenu:
 
         button_width = config.WINDOW_WIDTH // 6
         button_height = config.WINDOW_HEIGHT // 10
-
         button_x_offset = config.WINDOW_WIDTH // 25
-
         button_x_pos = button_x_offset + mid_x - button_width // 2
 
         print('\tTworzenie przycisków...')
@@ -31,14 +30,14 @@ class MainMenu:
 
         print('\tWczytywanie klatek animacji tła...')
         try:
-            bckg_image_1 = pygame.image.load('images\\main_menu1.png').convert()
-            bckg_image_2 = pygame.image.load('images\\main_menu2.png').convert()
+            bckg_image_1 = pygame.image.load('data/images/menu/main_menu1.png').convert()
+            bckg_image_2 = pygame.image.load('data/images/menu/main_menu2.png').convert()
 
             self.bckg_frames = [
                 pygame.transform.scale(bckg_image_1, (config.WINDOW_WIDTH, config.WINDOW_HEIGHT)),
                 pygame.transform.scale(bckg_image_2, (config.WINDOW_WIDTH, config.WINDOW_HEIGHT)),
             ]
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             print(f'Nie odnaleziono obrazków tła')
             self.bckg_frames = []
 
@@ -48,10 +47,12 @@ class MainMenu:
 
     def start_game(self):
         print("Rozpoczynanie nowej gry")
+        self.game.reset() 
         self.manager.set_state('game')
 
     def continue_game(self):
-        print("Wczytywanie gry")
+        print("Wznawianie gry")
+        self.manager.set_state('game')
 
     def open_settings(self):
         print("Otwieranie ustawień")
@@ -98,4 +99,3 @@ class MainMenu:
         for index, button in enumerate(self.buttons):
             is_selected = index == self.selected_button_idx
             button.draw(surface, is_selected, font, font_large)
-        

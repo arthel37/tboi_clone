@@ -1,6 +1,5 @@
 import pygame
 import sys
-import Entities
 
 BASE_IMG_PATH='data/images/'
 
@@ -18,9 +17,8 @@ key_to_index_shoot = {
     pygame.K_DOWN: 3
 }
 
-
-def EventHandlingMoj(movement, shooting):
-    for event in pygame.event.get():
+def EventHandlingMoj(events, movement, shooting):
+    for event in events:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
@@ -34,13 +32,19 @@ def EventHandlingMoj(movement, shooting):
                 shooting[key_to_index_shoot[event.key]] = state
 
 def load_image(path):
-    img = pygame.image.load(BASE_IMG_PATH+path).convert_alpha()
+    try:
+        img = pygame.image.load(BASE_IMG_PATH+path).convert_alpha()
+    except FileNotFoundError:
+        print(f"Warning: Could not load image {path}")
+        img = pygame.Surface((32, 32))
+        img.fill((255, 0, 255))
     return img
 
 def cut_sprite(sheet, x, y, w, h):
     surf = pygame.Surface((w, h), pygame.SRCALPHA)
     surf.blit(sheet, (0, 0), (x, y, w, h))
     return surf
+
 def create_walking_frames(sheet, start_row, start_col, frame_w, frame_h, rows, cols):
     frames = []
     for r in range(rows):
@@ -51,6 +55,8 @@ def create_walking_frames(sheet, start_row, start_col, frame_w, frame_h, rows, c
     return frames
 
 def spawn_enemy(game, type_name, pos, scale=3, anim_key=None):
+    import Entities 
+    
     if anim_key is None:
         anim_key = f"{type_name}_head"
     enemy = Entities.Enemy(game, pos, type_name=type_name, scale=scale, anim_key=anim_key)
@@ -58,7 +64,8 @@ def spawn_enemy(game, type_name, pos, scale=3, anim_key=None):
     return enemy
 
 def spawn_boss(game, name, pos):
-    from Bosses import Boss
+    from Bosses import Boss 
+    
     boss = Boss(game=game, pos=pos, name=name)
     game.entities.append(boss)
     return boss
