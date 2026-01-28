@@ -284,7 +284,6 @@ game_instance = Game(manager)
 main_menu = MainMenu(manager, game_instance)
 
 game_status = True
-prev_state = None
 
 while game_status:
     events = pygame.event.get()
@@ -322,7 +321,6 @@ while game_status:
         game_instance.ui.render(window_surface)
     
     pygame.display.update()
-    prev_state = curr_state
 
 pygame.quit()
 sys.exit()
